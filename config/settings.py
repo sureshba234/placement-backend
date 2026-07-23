@@ -88,7 +88,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"postgresql://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}"
+        env='DATABASE_URL',
+        default=f"postgresql://{config('DB_USER', default='placement_user')}:{config('DB_PASSWORD', default='changeme_dev_password')}@{config('DB_HOST', default='localhost')}:{config('DB_PORT', default='5432')}/{config('DB_NAME', default='placement_db')}"
     )
 }
 
