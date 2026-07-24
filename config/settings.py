@@ -170,8 +170,6 @@ CACHES = {
     }
 }
 
-# Matching service
-MATCHING_SERVICE_URL = config('MATCHING_SERVICE_URL', default='http://localhost:8001')
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
