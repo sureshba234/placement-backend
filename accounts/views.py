@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions
-from rest_framework.response import Response
+from .models import User
 from .serializers import UserProfileSerializer, ProfileUpdateSerializer, RegisterSerializer
+
 
 class MeView(generics.RetrieveAPIView):
     """Returns the currently authenticated user's profile, including role."""
