@@ -1,7 +1,6 @@
 from rest_framework import generics, permissions
-from .serializers import UserProfileSerializer
-from .serializers import ProfileUpdateSerializer
-
+from rest_framework.response import Response
+from .serializers import UserProfileSerializer, ProfileUpdateSerializer, RegisterSerializer
 
 class MeView(generics.RetrieveAPIView):
     """Returns the currently authenticated user's profile, including role."""
@@ -20,3 +19,13 @@ class UpdateProfileView(generics.UpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class RegisterView(generics.CreateAPIView):
+    """
+    Public endpoint — no authentication required.
+    Creates a new student account by default.
+    """
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
