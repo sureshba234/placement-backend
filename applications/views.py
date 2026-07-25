@@ -7,6 +7,8 @@ from django.core.cache import cache
 from django.db.models import Count
 from accounts.permissions import IsStudent, IsTPOAdmin, IsRecruiter
 from django.db.models import Count, Q
+from django.conf import settings
+from .tasks import trigger_match_scoring
 
 
 from accounts.permissions import IsStudent, IsTPOAdmin
@@ -25,8 +27,11 @@ class ApplyToDriveView(generics.CreateAPIView):
     permission_classes = [IsStudent]
 
     def perform_create(self, serializer):
-        serializer.save(student=self.request.user)
-        trigger_match_scoring.delay(application.id)
+        application = serializer.save(student=self.request.user)
+        if settings.USE_CELERY:
+            trigger_match_scoring.delay(application.id)
+        else:
+            trigger_match_scoring(application.id)
 
 
 class MyApplicationsView(generics.ListAPIView):

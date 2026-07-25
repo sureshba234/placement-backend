@@ -22,11 +22,14 @@ class DriveCreateView(generics.CreateAPIView):
     serializer_class = DriveSerializer
     permission_classes = [IsTPOAdmin]
 
+   
     def perform_create(self, serializer):
         drive = serializer.save(created_by=self.request.user)
         if drive.status == Drive.Status.OPEN:
-            notify_eligible_students.delay(drive.id)
-
+            if settings.USE_CELERY:
+                notify_eligible_students.delay(drive.id)
+            else:
+                notify_eligible_students(drive.id)
 class DriveListAllView(generics.ListAPIView):
     """
     TPO/admin view — list every drive regardless of eligibility,
@@ -89,7 +92,7 @@ class RecruiterDriveCreateView(generics.CreateAPIView):
     permission_classes = [IsRecruiter]
 
     def perform_create(self, serializer):
-        serializer.save(
+        drive = serializer.save(
             recruiter=self.request.user,
             created_by=self.request.user,
             status=Drive.Status.PENDING_APPROVAL,
@@ -129,11 +132,6 @@ class RecruiterDriveListView(generics.ListAPIView):
 
 
 class ApproveDriveView(generics.GenericAPIView):
-    """
-    TPO-only: approves a pending_approval drive, flipping it to open
-    and triggering the eligible-student notification exactly once,
-    at approval time rather than at recruiter-submission time.
-    """
     permission_classes = [IsTPOAdmin]
     queryset = Drive.objects.all()
 
@@ -151,11 +149,13 @@ class ApproveDriveView(generics.GenericAPIView):
 
         drive.status = Drive.Status.OPEN
         drive.save(update_fields=['status'])
-        notify_eligible_students.delay(drive.id)
+
+        if settings.USE_CELERY:
+            notify_eligible_students.delay(drive.id)
+        else:
+            notify_eligible_students(drive.id)
 
         return Response({'detail': f'Drive {drive.id} approved and now open.'})
-
-
 class PendingDrivesView(generics.ListAPIView):
     """TPO views all drives awaiting approval."""
     serializer_class = DriveSerializer
